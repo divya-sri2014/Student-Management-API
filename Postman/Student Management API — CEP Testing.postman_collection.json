@@ -1,0 +1,854 @@
+{
+  "info": {
+    "_postman_id": "ca8f8333-1553-4d23-93a5-9c2642d1b65f",
+    "name": "Student Management API — CEP Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53269426",
+    "_collection_link": "https://go.postman.co/collection/53269426-ca8f8333-1553-4d23-93a5-9c2642d1b65f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 — Basic API Checks",
+      "item": [
+        {
+          "name": "01 - API Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Success is true\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body.success).to.eql(true);\r\n});\r\n\r\npm.test(\"Correct health-check message\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body.message).to.eql(\r\n        \"Student Management API is running.\"\r\n    );\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Get All Students",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Student list is returned\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body.success).to.eql(true);\r\n    pm.expect(body.data).to.be.an(\"array\");\r\n    pm.expect(body.count).to.eql(body.data.length);\r\n});\r\n\r\npm.test(\"Initial student records exist\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body.count).to.be.at.least(2);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 — Create Student (POST)",
+      "item": [
+        {
+          "name": "Create Student (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Student created successfully\", function () {\r\n    const body = pm.response.json();\r\n\r\n    pm.expect(body.success).to.eql(true);\r\n    pm.expect(body.message).to.eql(\r\n        \"Student created successfully.\"\r\n    );\r\n});\r\n\r\npm.test(\"Created student has correct details\", function () {\r\n    const body = pm.response.json();\r\n\r\n    pm.expect(body.data).to.be.an(\"object\");\r\n    pm.expect(body.data.id).to.be.a(\"number\");\r\n    pm.expect(body.data.name).to.eql(\"Aarav Patel\");\r\n  pm.expect(body.data.email).to.eql(\r\n    pm.variables.get(\"createEmail\")\r\n);\r\n    pm.expect(body.data.age).to.eql(21);\r\n});\r\n\r\npm.test(\"Student ID is positive\", function () {\r\n    const body = pm.response.json();\r\n\r\n    pm.expect(body.data.id).to.be.above(0);\r\n});\r\n\r\nconst body = pm.response.json();\r\npm.collectionVariables.set(\"createdStudentId\", body.data.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const uniqueEmail = `aarav.${Date.now()}@example.com`;\r\npm.variables.set(\"createEmail\", uniqueEmail);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Aarav Patel\",\r\n  \"email\": \"{{createEmail}}\",\r\n  \"age\": 21\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Invalid name is rejected\", function () {\r\n    const response = pm.response.json();\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Validation failed.\");\r\n    pm.expect(response.errors.join(\" \")).to.include(\"Name is required\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"\",\r\n  \"email\": \"invalid.name.test@example.com\",\r\n  \"age\": 22\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Invalid email is rejected\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Validation failed.\");\r\n    pm.expect(response.errors.join(\" \")).to.include(\"valid email address\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Neha Joshi\",\r\n  \"email\": \"neha.invalid-email\",\r\n  \"age\": 21\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Age",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Invalid age is rejected\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Validation failed.\");\r\n    pm.expect(response.errors.join(\" \"))\r\n        .to.include(\"Age must be an integer between 16 and 100\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Amit Shah\",\r\n  \"email\": \"amit.invalid.age@example.com\",\r\n  \"age\": 15\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Missing required fields are reported\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Validation failed.\");\r\n\r\n    const errors = response.errors.join(\" \");\r\n    pm.expect(errors).to.include(\"Name is required\");\r\n    pm.expect(errors).to.include(\"valid email address\");\r\n    pm.expect(errors).to.include(\"Age must be an integer\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Malformed JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Malformed JSON error is returned\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message)\r\n        .to.eql(\"Malformed JSON request body.\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Pooja Patel\",\r\n  \"email\": \"pooja.malformed@example.com\",\r\n  \"age\": 22,",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Duplicate Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Duplicate email is rejected\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body.success).to.eql(false);\r\n    pm.expect(body.message).to.eql(\r\n        \"A student with this email already exists.\"\r\n    );\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Diya Shah Updated\",\r\n  \"email\": \"aarav@example.com\",\r\n  \"age\": 21\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 — Read Student (GET)",
+      "item": [
+        {
+          "name": "Read Student (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01 - Get Student By Valid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Correct student is returned\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(true);\r\n    pm.expect(response.data).to.be.an(\"object\");\r\n    pm.expect(response.data.id).to.eql(1);\r\n    pm.expect(response.data).to.have.property(\"name\");\r\n    pm.expect(response.data).to.have.property(\"email\");\r\n    pm.expect(response.data).to.have.property(\"age\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Get Student By Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Invalid student ID is rejected\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.be.a(\"string\");\r\n    pm.expect(response.message.length).to.be.above(0);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "abc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Get Nonexistent Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Nonexistent student is not found\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.be.a(\"string\");\r\n    pm.expect(response.message.toLowerCase()).to.include(\"not found\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Unknown GET Route",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Unknown route returns an error\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.be.a(\"string\");\r\n    pm.expect(response.message.length).to.be.above(0);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/unknown-route",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "unknown-route"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 — Update Student (PUT)",
+      "item": [
+        {
+          "name": "01 - Update Student Valid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict\", function () {\n    pm.response.to.have.status(409);\n});\n\npm.test(\"Response is JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Student update failed as expected\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(jsonData.success).to.be.false;\n    pm.expect(jsonData.message).to.equal(\"A student with this email already exists.\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Aarav Patel Updated\",\r\n  \"email\": \"aarav@example.com\",\r\n  \"age\": 22\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Update Student Invalid Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Invalid name is rejected\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Validation failed.\");\r\n    pm.expect(response.errors.join(\" \"))\r\n        .to.include(\"Name is required\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"\",\r\n  \"email\": \"aarav.invalid.test@example.com\",\r\n  \"age\": 23\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Update Student Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Response is JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Student update is successful\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(jsonData.success).to.be.true;\n    pm.expect(jsonData.message).to.eql(\"Student updated successfully.\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Aarav Patel Updated\",\r\n  \"email\": \"aarav.put.unique@example.com\",\r\n  \"age\": 22\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Update Nonexistent Student Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Nonexistent student update is rejected\", function () {\r\n    const response = pm.response.json();\r\n\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Student not found.\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Nonexistent Student\",\r\n  \"email\": \"nonexistent.update@example.com\",\r\n  \"age\": 25\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Update with Duplicate Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Duplicate email update is rejected\", function () {\r\n    const response = pm.response.json();\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\r\n        \"A student with this email already exists.\"\r\n    );\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Diya Shah\",\r\n  \"email\": \"aarav.put.unique@example.com\",\r\n  \"age\": 21\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 — Delete Student (DELETE)",
+      "item": [
+        {
+          "name": "01 - Delete Existing Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\n    pm.response.to.have.status(404);\n});\n\npm.test(\"Response is JSON\", function () {\n    pm.response.to.be.json;\n});\n\npm.test(\"Student not found message is returned\", function () {\n    var jsonData = pm.response.json();\n    pm.expect(jsonData.success).to.be.false;\n    pm.expect(jsonData.message).to.equal(\"Student not found.\");\n});"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest(\r\n    {\r\n        url: pm.collectionVariables.get(\"baseUrl\") + \"/api/students\",\r\n        method: \"GET\"\r\n    },\r\n    function (err, response) {\r\n        if (err) {\r\n            console.error(\"Could not retrieve students:\", err);\r\n            return;\r\n        }\r\n\r\n        const body = response.json();\r\n        const students = body.data;\r\n\r\n        if (!Array.isArray(students) || students.length === 0) {\r\n            console.error(\"No students available to delete.\");\r\n            return;\r\n        }\r\n\r\n        pm.collectionVariables.set(\r\n            \"deleteStudentId\",\r\n            String(students[0].id)\r\n        );\r\n    }\r\n);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/students/3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "students",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Delete with Invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Invalid ID is rejected\", function () {\r\n    const response = pm.response.json();\r\n    pm.expect(response.success).to.eql(false);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "abc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Delete Nonexistent Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Nonexistent student deletion is rejected\", function () {\r\n    const response = pm.response.json();\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Student not found.\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students/99",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "99"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04- Verify Deleted Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\npm.test(\"Deleted student cannot be retrieved\", function () {\r\n    const response = pm.response.json();\r\n    pm.expect(response.success).to.eql(false);\r\n    pm.expect(response.message).to.eql(\"Student not found.\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/students/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "deleteStudentId",
+      "value": ""
+    },
+    {
+      "key": "createdStudentId",
+      "value": ""
+    }
+  ]
+}
